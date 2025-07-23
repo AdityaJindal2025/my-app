@@ -8,6 +8,7 @@ import ConfirmDeleteModal from '../../components/ui/ConfirmDeleteModal';
 import PlanCard from '../../components/dashboard/PlanCard';
 import ApiKeyModal from '../../components/dashboard/ApiKeyModal';
 import ApiKeysTable from '../../components/dashboard/ApiKeysTable';
+import ApiKeyDetailsCard from '../../components/dashboard/ApiKeyDetailsCard';
 import { useApiKeys } from '../../hooks/useApiKeys';
 
 export default function Dashboard() {
@@ -20,9 +21,12 @@ export default function Dashboard() {
     formData,
     setFormData,
     visibleKeys,
+    visibleUserNames,
     notification,
     confirmDelete,
     activeDeleteIcon,
+    selectedApiKey,
+    isDetailsCardVisible,
     handleSubmit,
     handleEdit,
     handleDeleteClick,
@@ -31,6 +35,9 @@ export default function Dashboard() {
     toggleStatus,
     copyToClipboard,
     toggleKeyVisibility,
+    toggleUserNameVisibility,
+    handleShowDetails,
+    closeDetailsCard,
     openCreateModal,
     closeModal
   } = useApiKeys();
@@ -70,12 +77,15 @@ export default function Dashboard() {
               <ApiKeysTable
                 apiKeys={apiKeys}
                 visibleKeys={visibleKeys}
+                visibleUserNames={visibleUserNames}
                 activeDeleteIcon={activeDeleteIcon}
                 onToggleKeyVisibility={toggleKeyVisibility}
+                onToggleUserNameVisibility={toggleUserNameVisibility}
                 onCopyToClipboard={copyToClipboard}
                 onToggleStatus={toggleStatus}
                 onEdit={handleEdit}
                 onDeleteClick={handleDeleteClick}
+                onShowDetails={handleShowDetails}
               />
             </div>
             
@@ -86,6 +96,17 @@ export default function Dashboard() {
               setFormData={setFormData}
               onSubmit={handleSubmit}
               onClose={closeModal}
+            />
+
+            <ApiKeyDetailsCard
+              apiKey={selectedApiKey}
+              isVisible={isDetailsCardVisible}
+              onClose={closeDetailsCard}
+              onToggleKeyVisibility={toggleKeyVisibility}
+              onToggleUserNameVisibility={toggleUserNameVisibility}
+              onCopyToClipboard={copyToClipboard}
+              visibleKeys={visibleKeys}
+              visibleUserNames={visibleUserNames}
             />
           </div>
         </div>

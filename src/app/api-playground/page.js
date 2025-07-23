@@ -54,19 +54,34 @@ export default function ApiPlayground() {
           showNotification('Failed to validate API key', 'error');
         }
       } else if (data) {
-        // API key found in database
-        setResponse({
-          status: 'success',
-          data: {
-            message: 'API key is valid!',
-            timestamp: new Date().toISOString(),
-            key_type: data.type || 'unknown',
-            permissions: ['read', 'write'],
-            key_name: data.name,
-            key_status: data.status
-          }
-        });
-        showNotification('API key validated successfully!', 'success');
+        // API key found in database - check status
+        if (data.status === 'inactive') {
+          setResponse({
+            status: 'error',
+            data: {
+              message: 'Key Has Been Deactivated',
+              timestamp: new Date().toISOString(),
+              key_type: data.type || 'unknown',
+              key_name: data.name,
+              key_status: data.status
+            }
+          });
+          showNotification('API key has been deactivated', 'error');
+        } else {
+          // API key is active
+          setResponse({
+            status: 'success',
+            data: {
+              message: 'API key is valid!',
+              timestamp: new Date().toISOString(),
+              key_type: data.type || 'unknown',
+              permissions: ['read', 'write'],
+              key_name: data.name,
+              key_status: data.status
+            }
+          });
+          showNotification('API key validated successfully!', 'success');
+        }
       }
     } catch (err) {
       console.error('Error validating API key:', err);

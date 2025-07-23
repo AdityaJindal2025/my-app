@@ -1,24 +1,28 @@
 'use client';
 
-import { FaEye, FaEyeSlash, FaTrash, FaRegEdit } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaTrash, FaRegEdit, FaInfoCircle } from 'react-icons/fa';
 
 export default function ApiKeysTable({ 
   apiKeys, 
   visibleKeys, 
+  visibleUserNames,
   activeDeleteIcon,
   onToggleKeyVisibility, 
   onCopyToClipboard, 
   onToggleStatus, 
   onEdit, 
-  onDeleteClick 
+  onDeleteClick,
+  onToggleUserNameVisibility,
+  onShowDetails
 }) {
   return (
     <div className="overflow-x-auto max-h-96 overflow-y-auto">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50 sticky top-0 z-10">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">API Key</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Tool Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 whitespace-nowrap">API User Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50" style={{width: '220px'}}>API Key</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Type</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Status</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Actions</th>
@@ -26,7 +30,10 @@ export default function ApiKeysTable({
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {apiKeys.map((key) => (
-            <tr key={key.id} className="hover:bg-gray-50">
+            <tr 
+              key={key.id} 
+              className="hover:bg-gray-50"
+            >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div>
                   <div className="text-sm font-medium text-gray-900">{key.name}</div>
@@ -35,7 +42,29 @@ export default function ApiKeysTable({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center space-x-2">
-                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                  <code className="text-sm bg-gray-100 px-2 py-1 rounded w-full truncate block">
+                    {visibleUserNames && visibleUserNames[key.id] ? (key.userNameKey || '') : '*'.repeat((key.userNameKey || '').length)}
+                  </code>
+                  <button
+                    onClick={() => onToggleUserNameVisibility(key.id)}
+                    className="text-gray-500 hover:text-gray-800 text-sm"
+                    type="button"
+                    aria-label={visibleUserNames && visibleUserNames[key.id] ? 'Hide API user name' : 'Show API user name'}
+                  >
+                    {visibleUserNames && visibleUserNames[key.id] ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                  </button>
+                  <button
+                    onClick={() => onCopyToClipboard(key.userNameKey || '', 'userNameKey')}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    type="button"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap" style={{width: '220px'}}>
+                <div className="flex items-center space-x-2">
+                  <code className="text-sm bg-gray-100 px-2 py-1 rounded w-full truncate block">
                     {visibleKeys[key.id] ? key.key : '*'.repeat(key.key.length)}
                   </code>
                   <button
@@ -74,6 +103,14 @@ export default function ApiKeysTable({
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div className="flex space-x-2">
+                  <button
+                    onClick={() => onShowDetails(key)}
+                    className="text-blue-600 hover:text-blue-900 flex items-center"
+                    title="View API Key Details"
+                    type="button"
+                  >
+                    <FaInfoCircle className="mr-1" />
+                  </button>
                   <button
                     onClick={() => onEdit(key)}
                     className="text-blue-600 hover:text-blue-900 flex items-center"

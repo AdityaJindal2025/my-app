@@ -13,11 +13,75 @@ export function useApiKeys() {
     type: 'development',
     limit: '',
     limitEnabled: false,
+    subscriptionType: 'monthly',
+    expiryDate: '',
+    trackType: 'user',
+    trackLimit: '',
   });
   const [visibleKeys, setVisibleKeys] = useState({});
+  const [visibleUserNames, setVisibleUserNames] = useState({});
   const [notification, setNotification] = useState({ visible: false, message: '' });
   const [confirmDelete, setConfirmDelete] = useState({ visible: false, keyId: null });
   const [activeDeleteIcon, setActiveDeleteIcon] = useState(null);
+  const [selectedApiKey, setSelectedApiKey] = useState(null);
+  const [isDetailsCardVisible, setIsDetailsCardVisible] = useState(false);
+
+  // Function to check and update expired API keys
+  const checkAndUpdateExpiredKeys = async (keys) => {
+    if (!keys || keys.length === 0) return;
+    
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+
+    console.log('Checking for expired API keys...', { currentDate, totalKeys: keys.length });
+
+    for (const key of keys) {
+      if (key.expiryDate && key.status === 'active') {
+        const expiryDate = new Date(key.expiryDate);
+        expiryDate.setHours(0, 0, 0, 0);
+
+        console.log(`Checking key ${key.name}:`, { 
+          expiryDate: key.expiryDate, 
+          parsedExpiryDate: expiryDate, 
+          currentDate, 
+          isExpired: expiryDate <= currentDate 
+        });
+
+        if (expiryDate <= currentDate) {
+          try {
+            console.log(`Deactivating expired API key: ${key.name}`);
+            
+            // Update status to inactive in Supabase
+            const { error } = await supabase
+              .from('api_keys')
+              .update({ status: 'inactive' })
+              .eq('id', key.id);
+
+            if (error) {
+              console.error('Error updating expired API key status:', error);
+            } else {
+              console.log(`Successfully deactivated API key: ${key.name}`);
+            }
+          } catch (error) {
+            console.error('Error updating expired API key status:', error);
+          }
+        }
+      }
+    }
+
+    // Refresh the API keys list to reflect the updated statuses
+    try {
+      const { data, error } = await supabase.from('api_keys').select('*');
+      if (data && !error) {
+        console.log('Refreshing API keys list after expiry check');
+        setApiKeys(data);
+      } else if (error) {
+        console.error('Error refreshing API keys:', error);
+      }
+    } catch (error) {
+      console.error('Error refreshing API keys:', error);
+    }
+  };
 
   // Fetch API keys on component mount
   useEffect(() => {
@@ -25,7 +89,9 @@ export function useApiKeys() {
       try {
         const { data, error } = await supabase.from('api_keys').select('*');
         if (data) {
-          setApiKeys(data);
+          console.log('Fetched API keys:', data.length);
+          // Check for expired keys and update their status
+          await checkAndUpdateExpiredKeys(data);
         } else {
           console.error('Error fetching API keys:', error);
           // Fallback to mock data if Supabase is not configured
@@ -63,6 +129,17 @@ export function useApiKeys() {
     };
 
     fetchApiKeys();
+
+    // Set up periodic check for expired keys (every 5 minutes for testing, change to hourly in production)
+    const interval = setInterval(async () => {
+      console.log('Running periodic expiry check...');
+      const { data } = await supabase.from('api_keys').select('*');
+      if (data) {
+        await checkAndUpdateExpiredKeys(data);
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes for testing
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleSubmit = async (e) => {
@@ -97,12 +174,14 @@ export function useApiKeys() {
           return;
         }
 
-        // Update local state
-        setApiKeys(keys => keys.map(key =>
-          key.id === editingKey.id
-            ? { ...key, ...formData }
-            : key
-        ));
+        // Update local state with the actual updated record from Supabase
+        if (data && data.length > 0) {
+          setApiKeys(keys => keys.map(key =>
+            key.id === editingKey.id
+              ? data[0]
+              : key
+          ));
+        }
       } else {
         // Create new key in Supabase
         const limitValue = formData.limitEnabled && formData.limit ? Number(formData.limit) : null;
@@ -112,13 +191,30 @@ export function useApiKeys() {
           alert('Please enter a valid positive number for the limit');
           return;
         }
+
+        // Validate expiry date is ahead of current date
+        if (formData.expiryDate) {
+          const selectedDate = new Date(formData.expiryDate);
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+          
+          if (selectedDate <= currentDate) {
+            alert('Expiry date must be ahead of the current date');
+            return;
+          }
+        }
         
         const newKeyData = {
-          name: formData.name,
+          name: formData.name, // Tool Name
+          userNameKey: formData.userName, // API User Name
           description: formData.description,
           type: formData.type,
-          key: `pk_${Math.random().toString(36).substr(2, 9)}`,
+          key: formData.key || `pk_${Math.random().toString(36).substr(2, 9)}`,
           limit: limitValue,
+          subscriptionType: formData.subscriptionType,
+          expiryDate: formData.expiryDate,
+          trackType: formData.trackType,
+          trackLimit: formData.trackLimit ? Number(formData.trackLimit) : null,
           status: 'active',
           created_at: new Date().toISOString(),
           last_used: null
@@ -143,7 +239,7 @@ export function useApiKeys() {
       
       setIsModalOpen(false);
       setEditingKey(null);
-      setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false });
+      setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, subscriptionType: 'monthly', expiryDate: '', trackType: 'user', trackLimit: '' });
     } catch (error) {
       console.error('Error saving API key:', error);
       alert('Failed to save API key');
@@ -154,6 +250,8 @@ export function useApiKeys() {
     setEditingKey(key);
     setFormData({
       name: key.name,
+      userName: key.userNameKey || '',
+      key: key.key || '',
       description: key.description,
       type: key.type || 'development',
       limit: key.limit ? key.limit.toString() : '',
@@ -219,10 +317,16 @@ export function useApiKeys() {
     }
   };
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text, fieldType) => {
     navigator.clipboard.writeText(text)
-      .then(() => showNotification('Copied API Key to clipboard', 'success'))
-      .catch(() => showNotification('Failed to copy API Key', 'error'));
+      .then(() => {
+        if (fieldType === 'userNameKey') {
+          showNotification('Copied API User Name to clipboard', 'success');
+        } else {
+          showNotification('Copied API Key to clipboard', 'success');
+        }
+      })
+      .catch(() => showNotification('Failed to copy', 'error'));
   };
 
   const showNotification = (message, type = 'success') => {
@@ -236,16 +340,30 @@ export function useApiKeys() {
     setVisibleKeys((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const toggleUserNameVisibility = (id) => {
+    setVisibleUserNames((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleShowDetails = (apiKey) => {
+    setSelectedApiKey(apiKey);
+    setIsDetailsCardVisible(true);
+  };
+
+  const closeDetailsCard = () => {
+    setIsDetailsCardVisible(false);
+    setSelectedApiKey(null);
+  };
+
   const openCreateModal = () => {
     setIsModalOpen(true);
     setEditingKey(null);
-    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false });
+    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, subscriptionType: 'monthly', expiryDate: '', trackType: 'user', trackLimit: '' });
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingKey(null);
-    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false });
+    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, subscriptionType: 'monthly', expiryDate: '', trackType: 'user', trackLimit: '' });
   };
 
   return {
@@ -255,9 +373,12 @@ export function useApiKeys() {
     formData,
     setFormData,
     visibleKeys,
+    visibleUserNames,
     notification,
     confirmDelete,
     activeDeleteIcon,
+    selectedApiKey,
+    isDetailsCardVisible,
     handleSubmit,
     handleEdit,
     handleDeleteClick,
@@ -266,6 +387,9 @@ export function useApiKeys() {
     toggleStatus,
     copyToClipboard,
     toggleKeyVisibility,
+    toggleUserNameVisibility,
+    handleShowDetails,
+    closeDetailsCard,
     openCreateModal,
     closeModal
   };
