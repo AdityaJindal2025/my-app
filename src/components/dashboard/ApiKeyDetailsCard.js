@@ -122,6 +122,7 @@ export default function ApiKeyDetailsCard({
                 <div className="bg-gray-50 px-4 py-3 rounded-lg">
                   <span className="text-gray-900 capitalize">
                     {apiKey.trackType}
+                    {apiKey.trackLimit && apiKey.trackLimit > 0 && ` - ${apiKey.trackLimit}`}
                   </span>
                 </div>
               </div>

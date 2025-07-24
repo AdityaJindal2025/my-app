@@ -159,39 +159,37 @@ export default function ApiKeyModal({
                 </div>
               )}
             </div>
-            {/* Track field for creation mode */}
-            {!editingKey && (
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Track <span className="text-gray-400">— Choose tracking type</span>
-                </label>
-                <div className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    <select
-                      value={formData.trackType || 'user'}
-                      onChange={e => setFormData({ ...formData, trackType: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900"
-                    >
-                      <option value="user">User</option>
-                      <option value="usage">Usage</option>
-                      <option value="days">Days</option>
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Notify When</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.trackLimit || ''}
-                      onChange={e => setFormData({ ...formData, trackLimit: e.target.value })}
-                      placeholder="Number"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900"
-                      required
-                    />
-                  </div>
+            {/* Track field */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Track <span className="text-gray-400">— Choose tracking type</span>
+              </label>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <select
+                    value={formData.trackType || 'user'}
+                    onChange={e => setFormData({ ...formData, trackType: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900"
+                  >
+                    <option value="user">User</option>
+                    <option value="usage">Usage</option>
+                    <option value="days">Days</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notify When</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.trackLimit || ''}
+                    onChange={e => setFormData({ ...formData, trackLimit: e.target.value })}
+                    placeholder="Number"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900"
+                    required
+                  />
                 </div>
               </div>
-            )}
+            </div>
             {/* Key Type field (always shown) */}
             <div className="mb-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -224,54 +222,6 @@ export default function ApiKeyModal({
                 </button>
               </div>
             </div>
-            {/* Subscription Type and Expiry Date fields for creation mode */}
-            {!editingKey && (
-              <>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Subscription Type <span className="text-gray-400">— Choose your billing cycle</span>
-                  </label>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="button"
-                      className={`flex flex-col items-start w-full border rounded-lg px-4 py-3 text-left mb-1 ${formData.subscriptionType === 'monthly' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'} transition`}
-                      onClick={() => setFormData({ ...formData, subscriptionType: 'monthly' })}
-                    >
-                      <div className="flex items-center mb-1">
-                        <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${formData.subscriptionType === 'monthly' ? 'border-blue-600' : 'border-gray-300'}`}> 
-                          {formData.subscriptionType === 'monthly' && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
-                        </span>
-                        <span className="font-semibold text-gray-900">Monthly</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex flex-col items-start w-full border rounded-lg px-4 py-3 text-left ${formData.subscriptionType === 'annually' ? 'border-purple-600 bg-purple-50' : 'border-gray-200 bg-white'} transition`}
-                      onClick={() => setFormData({ ...formData, subscriptionType: 'annually' })}
-                    >
-                      <div className="flex items-center mb-1">
-                        <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${formData.subscriptionType === 'annually' ? 'border-purple-600' : 'border-gray-300'}`}> 
-                          {formData.subscriptionType === 'annually' && <span className="w-2 h-2 bg-purple-600 rounded-full"></span>}
-                        </span>
-                        <span className="font-semibold text-gray-900">Annually</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Expiry Date <span className="text-gray-400">— When this API key expires</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.expiryDate || ''}
-                    onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900"
-                    required
-                  />
-                </div>
-              </>
-            )}
             <div className="flex justify-center gap-4 mt-4">
               <button
                 type="submit"

@@ -160,9 +160,12 @@ export function useApiKeys() {
           .from('api_keys')
           .update({
             name: formData.name,
+            userNameKey: formData.userName,
             description: formData.description,
             type: formData.type,
             limit: limitValue,
+            trackType: formData.trackType,
+            trackLimit: formData.trackLimit ? Number(formData.trackLimit) : null,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingKey.id)
@@ -191,18 +194,6 @@ export function useApiKeys() {
           alert('Please enter a valid positive number for the limit');
           return;
         }
-
-        // Validate expiry date is ahead of current date
-        if (formData.expiryDate) {
-          const selectedDate = new Date(formData.expiryDate);
-          const currentDate = new Date();
-          currentDate.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-          
-          if (selectedDate <= currentDate) {
-            alert('Expiry date must be ahead of the current date');
-            return;
-          }
-        }
         
         const newKeyData = {
           name: formData.name, // Tool Name
@@ -211,8 +202,6 @@ export function useApiKeys() {
           type: formData.type,
           key: formData.key || `pk_${Math.random().toString(36).substr(2, 9)}`,
           limit: limitValue,
-          subscriptionType: formData.subscriptionType,
-          expiryDate: formData.expiryDate,
           trackType: formData.trackType,
           trackLimit: formData.trackLimit ? Number(formData.trackLimit) : null,
           status: 'active',
@@ -239,7 +228,7 @@ export function useApiKeys() {
       
       setIsModalOpen(false);
       setEditingKey(null);
-      setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, subscriptionType: 'monthly', expiryDate: '', trackType: 'user', trackLimit: '' });
+      setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, trackType: 'user', trackLimit: '' });
     } catch (error) {
       console.error('Error saving API key:', error);
       alert('Failed to save API key');
@@ -256,6 +245,8 @@ export function useApiKeys() {
       type: key.type || 'development',
       limit: key.limit ? key.limit.toString() : '',
       limitEnabled: key.limit ? true : false,
+      trackType: key.trackType || 'user',
+      trackLimit: key.trackLimit ? key.trackLimit.toString() : '',
     });
     setIsModalOpen(true);
   };
@@ -357,13 +348,13 @@ export function useApiKeys() {
   const openCreateModal = () => {
     setIsModalOpen(true);
     setEditingKey(null);
-    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, subscriptionType: 'monthly', expiryDate: '', trackType: 'user', trackLimit: '' });
+    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, trackType: 'user', trackLimit: '' });
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingKey(null);
-    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, subscriptionType: 'monthly', expiryDate: '', trackType: 'user', trackLimit: '' });
+    setFormData({ name: '', description: '', type: 'development', limit: '', limitEnabled: false, trackType: 'user', trackLimit: '' });
   };
 
   return {
